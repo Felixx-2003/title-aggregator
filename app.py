@@ -1,26 +1,28 @@
-from flask import Flask, render_template
-import requests
-from bs4 import BeautifulSoup
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latest Tech Headlines</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { color: #333; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 5px 0; }
+        a { text-decoration: none; color: #007BFF; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>Latest Tech Headlines</h1>
 
-app = Flask(__name__)
-
-def scrape_the_verge():
-    url = "https://www.theverge.com/"
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, "html.parser")
-    
-    articles = []
-    for item in soup.find_all("h2", class_="font-bold text-lg"):  # Adjust selector if needed
-        title = item.text.strip()
-        link = item.find("a")["href"] if item.find("a") else "#"
-        articles.append({"title": title, "link": link})
-    
-    return articles
-
-@app.route("/")
-def home():
-    articles = scrape_the_verge()
-    return render_template("index.html", articles=articles)
-
-if __name__ == "__main__":
-    app.run(debug=True)
+    {% for headline, articles in articles_by_headline.items() %}
+        <h2>{{ headline }}</h2>
+        <ul>
+            {% for article in articles %}
+                <li><a href="{{ article.url }}" target="_blank">{{ article.title }}</a></li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+</body>
+</html>

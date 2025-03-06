@@ -1,28 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latest Tech Headlines</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1, h2 { color: #333; }
-        ul { list-style: none; padding: 0; }
-        li { margin: 5px 0; }
-        a { text-decoration: none; color: #007BFF; }
-        a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <h1>Latest Tech Headlines</h1>
+from flask import Flask, render_template
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin  # Fix relative URLs
 
-    {% for headline, articles in articles_by_headline.items() %}
-        <h2>{{ headline }}</h2>
-        <ul>
-            {% for article in articles %}
-                <li><a href="{{ article.url }}" target="_blank">{{ article.title }}</a></li>
-            {% endfor %}
-        </ul>
-    {% endfor %}
-</body>
-</html>
+app = Flask(__name__)
+
+def get_articles():
+    url = "https://www.theverge.com/"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }  # Mimic a real browser to prevent blocking
+
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    articles = []
+
+    # 🔥 Find all articles using the correct selector for <a> tags
+    for item in soup.select("a._1lkmsmo1"):  
+        title = item.text.strip()
+        link = urljoin(url, item["href"])  # Convert relative URL to full URL
+
+        if title and link.startswith("https://www.theverge.com/news/"):
+            articles.append({"title": title, "url": link})
+
+    if not articles:
+        print("⚠️ No articles found! The Verge might have changed its structure.")
+
+    return articles
+
+@app.route("/")
+def home():
+    articles = get_articles()
+    return render_template("index.html", articles=articles)
+
+if __name__ == "__main__":
+    app.run(debug=True)
